@@ -40,14 +40,16 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-// Apply API Key middleware to all API routes
+// Webhook routes (no API key required - webhook hub uses signature verification)
+app.use("/api/webhook", webhookRoutes);
+
+// Apply API Key middleware to all other API routes
 app.use("/api", apiKeyMiddleware);
 
 // Routes
 app.use("/api/products", productRoutes);
 app.use("/api/stocks", stockRoutes);
 app.use("/api/purchase", purchaseRoutes);
-app.use("/api/webhook", webhookRoutes);
 
 // 404 handler
 app.use((req, res) => {
