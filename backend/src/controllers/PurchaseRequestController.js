@@ -84,7 +84,7 @@ class PurchaseRequestController {
 
   static async createPurchaseRequest(req, res, next) {
     try {
-      const { warehouse_id, items } = req.body;
+      const { warehouse_id, items, reference } = req.body;
 
       if (!warehouse_id) {
         const response = ResponseFormatter.error(
@@ -131,11 +131,12 @@ class PurchaseRequestController {
         }
       }
 
-      const reference = PurchaseRequestController.generateReference();
+      // Use provided reference or generate new one
+      const prReference = reference || PurchaseRequestController.generateReference();
 
       const purchaseRequest =
         await PurchaseRequestService.createPurchaseRequest(
-          reference,
+          prReference,
           warehouse_id,
           items
         );
