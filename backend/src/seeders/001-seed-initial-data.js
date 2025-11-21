@@ -26,7 +26,7 @@ module.exports = {
       },
     ]);
 
-    const productIds = [uuidv4(), uuidv4(), uuidv4(), uuidv4()];
+    const productIds = [uuidv4(), uuidv4(), uuidv4(), uuidv4(), uuidv4()];
 
     await queryInterface.bulkInsert("products", [
       {
@@ -54,6 +54,13 @@ module.exports = {
         id: productIds[3],
         name: "Vanilla Dream",
         sku: "VANADREAM",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: productIds[4],
+        name: "Icy Watermelon",
+        sku: "ICYWATERMELON",
         createdAt: new Date(),
         updatedAt: new Date(),
       },

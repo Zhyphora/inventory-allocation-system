@@ -8,6 +8,17 @@ class WebhookController {
     try {
       const { vendor, reference, qty_total, details } = req.body;
 
+      console.log("Webhook received body:", JSON.stringify(req.body, null, 2));
+      console.log(
+        "Vendor:",
+        vendor,
+        "| Reference:",
+        reference,
+        "| Details:",
+        details
+      );
+      console.log("Expected vendor:", process.env.VENDOR_NAME);
+
       if (!vendor || !reference || !details) {
         const response = ResponseFormatter.error(
           "Validation failed",
@@ -18,6 +29,9 @@ class WebhookController {
       }
 
       if (vendor !== process.env.VENDOR_NAME) {
+        console.log(
+          `Vendor mismatch: received '${vendor}' vs expected '${process.env.VENDOR_NAME}'`
+        );
         const response = ResponseFormatter.forbidden(
           `Vendor ${vendor} is not authorized`
         );
@@ -67,7 +81,6 @@ class WebhookController {
 
       try {
         for (const detail of details) {
-
           const product = await models.Product.findOne(
             {
               where: { sku: detail.sku_barcode },
