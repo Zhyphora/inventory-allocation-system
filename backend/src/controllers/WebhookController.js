@@ -6,9 +6,17 @@ const ResponseFormatter = require("../utils/ResponseFormatter");
 class WebhookController {
   static async receiveStock(req, res, next) {
     try {
-      const { vendor, reference, qty_total, details } = req.body;
-
+      console.log("Raw body type:", typeof req.body);
       console.log("Webhook received body:", JSON.stringify(req.body, null, 2));
+
+      // Handle both direct payload and wrapped in 'data' field
+      let payload = req.body;
+      if (req.body.data && !req.body.vendor) {
+        payload = req.body.data;
+      }
+
+      const { vendor, reference, qty_total, details } = payload;
+
       console.log(
         "Vendor:",
         vendor,
