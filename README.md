@@ -92,11 +92,13 @@ npm run dev
 ## API Endpoints
 
 ### Products
+
 ```
 GET /api/products
 ```
 
 ### Stocks
+
 ```
 GET /api/stocks
 GET /api/stocks?warehouse_id={uuid}
@@ -106,6 +108,7 @@ GET /api/purchase/request/{id}
 ```
 
 ### Purchase Requests
+
 ```
 POST /api/purchase/request
 PUT /api/purchase/request/{id}
@@ -113,6 +116,7 @@ DELETE /api/purchase/request/{id}
 ```
 
 ### Webhooks
+
 ```
 POST /api/webhook/receive-stock
 ```
@@ -132,11 +136,13 @@ POST /api/webhook/receive-stock
 ### Architecture
 
 1. **MVC Pattern**: Separation of concerns
+
    - Models: Database entities with relationships
    - Controllers: Request handling and validation
    - Services: Business logic implementation
 
 2. **Response Standardization**: All endpoints return consistent response format
+
    ```json
    {
      "status": "success|error",
@@ -149,6 +155,7 @@ POST /api/webhook/receive-stock
    ```
 
 3. **API Key Authentication**: Simple header-based security
+
    - Header: `x-api-key`
    - Value: `Testing1` (development)
 
@@ -160,11 +167,13 @@ POST /api/webhook/receive-stock
 ### Business Logic
 
 1. **Purchase Request Status Flow**
+
    - DRAFT → PENDING (via PUT with status update)
    - PENDING → COMPLETED (via webhook stock receipt)
    - Can only delete DRAFT requests
 
 2. **Stock Management**
+
    - Composite unique index on (warehouse_id, product_id)
    - Stock updated via webhook with ACID transaction
    - Idempotency check using idempotency headers
@@ -180,17 +189,20 @@ POST /api/webhook/receive-stock
 ### Backend
 
 1. **Database**
+
    - Add indexes on frequently queried columns (status, created_at)
    - Implement database connection pooling optimization
    - Add archival tables for historical data
 
 2. **API Features**
+
    - Pagination for list endpoints
    - Advanced filtering and sorting
    - Batch operations for multiple items
    - Request rate limiting and throttling
 
 3. **Security**
+
    - JWT token authentication instead of API keys
    - Role-based access control (RBAC)
    - Audit logging for all state changes
@@ -205,18 +217,21 @@ POST /api/webhook/receive-stock
 ### Frontend
 
 1. **UX/UI**
+
    - Advanced data visualization (charts, graphs)
    - Export to CSV/PDF functionality
    - Bulk operations on purchase requests
    - Real-time notifications
 
 2. **Performance**
+
    - Implement infinite scroll or pagination
    - Client-side data caching with SWR/React Query
    - Code splitting and lazy loading
    - Image optimization
 
 3. **Testing**
+
    - Unit tests for components
    - Integration tests for API calls
    - E2E tests with Cypress/Playwright
@@ -300,6 +315,7 @@ NEXT_PUBLIC_API_KEY=Testing1
 ### Backend Issues
 
 **Port 3000 already in use**
+
 ```bash
 # macOS/Linux
 lsof -ti:3000 | xargs kill -9
@@ -310,6 +326,7 @@ taskkill /PID <PID> /F
 ```
 
 **Database connection failed**
+
 - Verify PostgreSQL is running
 - Check credentials in .env file
 - Ensure database exists: `createdb inventory_db`
@@ -318,11 +335,13 @@ taskkill /PID <PID> /F
 ### Frontend Issues
 
 **API calls failing with 401**
+
 - Verify backend is running on http://localhost:3000
 - Check `NEXT_PUBLIC_API_KEY` matches backend `API_KEY`
 - Clear browser cache and local storage
 
 **Build errors**
+
 ```bash
 # Clear cache and reinstall
 rm -rf node_modules package-lock.json

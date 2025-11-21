@@ -59,6 +59,7 @@ frontend/
 ### Pages Implemented
 
 #### 1. Stock Dashboard (/)
+
 - **Features**:
   - Display inventory in table format
   - Columns: Product Name, SKU, Warehouse Name, Current Quantity
@@ -70,6 +71,7 @@ frontend/
 - **API Calls**: GET /api/stocks, GET /api/products
 
 #### 2. Purchase Requests List (/purchase-requests)
+
 - **Features**:
   - Table with: Reference, Warehouse, Total Quantity, Status, Date, Action
   - Search by reference number
@@ -80,6 +82,7 @@ frontend/
 - **API Calls**: GET /api/purchase/request
 
 #### 3. Create Purchase Request (/purchase-requests/create)
+
 - **Features**:
   - Warehouse selection dropdown
   - Dynamic item rows:
@@ -94,12 +97,13 @@ frontend/
   - Submit button with loading state
   - Success message redirect to list
   - Error messages display
-- **API Calls**: 
+- **API Calls**:
   - GET /api/products
   - GET /api/stocks (for warehouses)
   - POST /api/purchase/request
 
 #### 4. Purchase Request Detail (/purchase-requests/[id])
+
 - **Features**:
   - Display metadata: Reference, Status, Warehouse, Created Date
   - Show line items in table: Product, SKU, Quantity, Total
@@ -118,6 +122,7 @@ frontend/
 ### API Integration
 
 **API Client** (`src/lib/api.ts`):
+
 - Base URL: http://localhost:3000
 - API Key header: x-api-key (from .env.local)
 - Auto error handling and response transformation
@@ -136,21 +141,25 @@ frontend/
 ### UI Components
 
 **ErrorAlert**
+
 - Displays error message with red styling
 - Red icon, border, background
 - Dismissable by clearing state
 
 **SuccessAlert**
+
 - Green styling with checkmark icon
 - Shows success message
 - Auto-dismiss or manual
 
 **LoadingSpinner**
+
 - Animated circular spinner
 - Centered on page
 - Prevents user interaction
 
 **Button**
+
 - Loading state with spinner
 - Disabled during submission
 - Tailwind styling: blue primary
@@ -171,21 +180,23 @@ frontend/
 
 ```typescript
 // Global error state
-const { error, setError, clearError } = useError()
+const { error, setError, clearError } = useError();
 
 // Global loading state
-const { isLoading, setLoading } = useLoading()
+const { isLoading, setLoading } = useLoading();
 ```
 
 ### Environment Variables
 
 **.env.local** (development):
+
 ```
 NEXT_PUBLIC_API_URL=http://localhost:3000
 NEXT_PUBLIC_API_KEY=Testing1
 ```
 
 **.env.production** (when deploying):
+
 ```
 NEXT_PUBLIC_API_URL=https://api.yourdomain.com
 NEXT_PUBLIC_API_KEY=your_production_key
@@ -194,6 +205,7 @@ NEXT_PUBLIC_API_KEY=your_production_key
 ### Navigation
 
 **Header Component**:
+
 ```
 Inventory Allocation System
 ├── Dashboard (/)
@@ -228,22 +240,27 @@ Inventory Allocation System
 ### Development
 
 **Start dev server**:
+
 ```bash
 npm run dev
 ```
+
 - Runs on http://localhost:3000
 - Hot reload on file changes
 - TypeScript compilation
 
 **Build for production**:
+
 ```bash
 npm run build
 ```
+
 - Next.js optimizes bundle
 - All routes prerendered where possible
 - Dynamic routes support
 
 **Start production build**:
+
 ```bash
 npm run start
 ```
@@ -288,6 +305,7 @@ npm run start
 ### Deployment Ready
 
 ✅ Frontend is production-ready for deployment to:
+
 - Vercel (recommended for Next.js)
 - GitHub Pages (static export)
 - Docker + any cloud (AWS, Azure, GCP)
@@ -346,6 +364,7 @@ npx tsc --noEmit
 - Production ready
 
 **Next Steps**:
+
 1. ✅ Build test passed
 2. Start backend: `npm run dev` in backend/
 3. Start frontend: `npm run dev` in frontend/

@@ -39,7 +39,7 @@ git commit -m "Initial commit: Setup Inventory Allocation System
 - Postman collection ready"
 
 # Add remote
-git remote add origin https://github.com/{YOUR_USERNAME}/inventory-allocation-system.git
+git remote add origin https://github.com/Zhyphora/inventory-allocation-system.git
 
 # Rename branch to main if needed
 git branch -M main
@@ -185,20 +185,24 @@ Create `.github/pull_request_template.md`:
 
 ```markdown
 ## Description
+
 Brief description of changes
 
 ## Type
+
 - [ ] Feature
 - [ ] Bug fix
 - [ ] Documentation
 - [ ] Performance improvement
 
 ## Testing
+
 - [ ] Unit tests added
 - [ ] Manual testing done
 - [ ] Tested on mobile
 
 ## Checklist
+
 - [ ] Code follows project style
 - [ ] Comments added for complex logic
 - [ ] Documentation updated
@@ -228,7 +232,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: "18"
       - run: cd backend && npm install
       - run: cd backend && npm run test
 
@@ -238,7 +242,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: "18"
       - run: cd frontend && npm install
       - run: cd frontend && npm run build
       - run: cd frontend && npm run lint
@@ -263,7 +267,7 @@ Create `.github/CODEOWNERS`:
 # Backend
 /backend/ @yourname
 
-# Frontend  
+# Frontend
 /frontend/ @yourname
 
 # Documentation
@@ -291,6 +295,7 @@ git push origin v1.0.0
 ### Documentation in Wiki
 
 Create GitHub Wiki with:
+
 - Setup guide
 - Architecture overview
 - API guide
@@ -349,15 +354,18 @@ git reset --hard HEAD~1
 After creating repository:
 
 1. **Settings → General**
+
    - Set main branch default
    - Enable squash merging
    - Enable auto-delete head branches
 
 2. **Settings → Collaborators**
+
    - Add team members as needed
    - Set appropriate permissions
 
 3. **Settings → Actions**
+
    - Enable GitHub Actions for CI/CD
 
 4. **Settings → Security**
@@ -367,24 +375,29 @@ After creating repository:
 ## Documentation to Add to README
 
 ### Installation & Setup
+
 - Link to backend/README.md
 - Link to frontend/README.md
 - Quick start commands
 
 ### Features
+
 - List main features
 - Link to detailed documentation
 
 ### Project Structure
+
 - Explain folder organization
 - Point to specific READMEs
 
 ### Contributing
+
 - Code style guidelines
 - Testing requirements
 - Commit message format
 
 ### License
+
 - Add MIT or appropriate license
 - Include license file
 
