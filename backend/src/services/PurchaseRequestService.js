@@ -1,4 +1,4 @@
-git branch -M mainconst models = require("../models");
+models = require("../models");
 const ExternalAPIService = require("./ExternalAPIService");
 
 class PurchaseRequestService {
