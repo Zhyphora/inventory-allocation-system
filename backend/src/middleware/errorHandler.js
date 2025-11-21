@@ -1,39 +1,63 @@
+const ResponseFormatter = require("../utils/ResponseFormatter");
+
 const errorHandler = (err, req, res, next) => {
   console.error("Error:", err);
 
   // Sequelize validation errors
   if (err.name === "SequelizeValidationError") {
-    return res.status(400).json({
-      success: false,
-      error: "Validation Error",
-      details: err.errors.map((e) => e.message),
-    });
+    const details = err.errors.map((e) => ({
+      field: e.path,
+      message: e.message,
+    }));
+    const response = ResponseFormatter.validationError(
+      "Validation Error",
+      details
+    );
+    return res.status(response.statusCode).json(response);
   }
 
   // Sequelize unique constraint errors
   if (err.name === "SequelizeUniqueConstraintError") {
-    return res.status(409).json({
-      success: false,
-      error: "Constraint Error",
-      message: "Resource already exists",
-    });
+    const response = ResponseFormatter.conflict(
+      "Resource already exists",
+      { fields: err.fields }
+    );
+    return res.status(response.statusCode).json(response);
   }
 
   // Sequelize foreign key errors
   if (err.name === "SequelizeForeignKeyConstraintError") {
-    return res.status(400).json({
-      success: false,
-      error: "Foreign Key Error",
-      message: "Invalid reference to related resource",
-    });
+    const response = ResponseFormatter.error(
+      "Invalid reference to related resource",
+      {
+        type: "FOREIGN_KEY_ERROR",
+        table: err.table,
+      },
+      400
+    );
+    return res.status(response.statusCode).json(response);
+  }
+
+  // Sequelize eager loading errors
+  if (err.name === "SequelizeEagerLoadingError") {
+    const response = ResponseFormatter.error(
+      "Database Query Error",
+      {
+        type: "EAGER_LOADING_ERROR",
+        message: err.message,
+      },
+      500
+    );
+    return res.status(response.statusCode).json(response);
   }
 
   // Generic server error
-  res.status(500).json({
-    success: false,
-    error: "Internal Server Error",
-    message: err.message,
-  });
+  const response = ResponseFormatter.internalServerError(
+    err.message || "Internal Server Error",
+    process.env.NODE_ENV === "development" ? err : null
+  );
+  res.status(response.statusCode).json(response);
 };
 
 module.exports = errorHandler;
+
