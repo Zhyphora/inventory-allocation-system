@@ -132,7 +132,8 @@ class PurchaseRequestController {
       }
 
       // Use provided reference or generate new one
-      const prReference = reference || PurchaseRequestController.generateReference();
+      const prReference =
+        reference || PurchaseRequestController.generateReference();
 
       const purchaseRequest =
         await PurchaseRequestService.createPurchaseRequest(
