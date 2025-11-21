@@ -18,10 +18,9 @@ const errorHandler = (err, req, res, next) => {
 
   // Sequelize unique constraint errors
   if (err.name === "SequelizeUniqueConstraintError") {
-    const response = ResponseFormatter.conflict(
-      "Resource already exists",
-      { fields: err.fields }
-    );
+    const response = ResponseFormatter.conflict("Resource already exists", {
+      fields: err.fields,
+    });
     return res.status(response.statusCode).json(response);
   }
 
@@ -60,4 +59,3 @@ const errorHandler = (err, req, res, next) => {
 };
 
 module.exports = errorHandler;
-
