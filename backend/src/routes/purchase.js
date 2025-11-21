@@ -5,6 +5,11 @@ const router = express.Router();
 
 router.get("/request", PurchaseRequestController.getAllPurchaseRequests);
 
+router.get(
+  "/request/reference/:reference",
+  PurchaseRequestController.getPurchaseRequestByReference
+);
+
 router.get("/request/:id", PurchaseRequestController.getPurchaseRequestById);
 
 router.post("/request", PurchaseRequestController.createPurchaseRequest);

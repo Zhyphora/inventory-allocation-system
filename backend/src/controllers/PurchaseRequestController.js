@@ -40,6 +40,49 @@ class PurchaseRequestController {
     }
   }
 
+  static async getPurchaseRequestByReference(req, res, next) {
+    try {
+      const { reference } = req.params;
+
+      const purchaseRequest = await models.PurchaseRequest.findOne({
+        where: { reference },
+        include: [
+          {
+            model: models.Warehouse,
+            as: "warehouse",
+            attributes: ["id", "name"],
+          },
+          {
+            model: models.PurchaseRequestItem,
+            as: "items",
+            include: [
+              {
+                model: models.Product,
+                as: "product",
+                attributes: ["id", "name", "sku"],
+              },
+            ],
+          },
+        ],
+      });
+
+      if (!purchaseRequest) {
+        const response = ResponseFormatter.notFound("Purchase Request");
+        return res.status(404).json(response);
+      }
+
+      const response = ResponseFormatter.success(
+        "Purchase Request retrieved successfully",
+        purchaseRequest,
+        200
+      );
+
+      res.status(200).json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async getPurchaseRequestById(req, res, next) {
     try {
       const { id } = req.params;
