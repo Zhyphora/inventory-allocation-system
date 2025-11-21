@@ -27,7 +27,10 @@ Thumbs.db
 *~
 .project
 .classpath
+loc.json
 
+# Misc files
+.DS_Store.bak
 # Testing
 coverage/
 .nyc_output/
