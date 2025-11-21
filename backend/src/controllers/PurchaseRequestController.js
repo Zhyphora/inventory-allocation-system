@@ -8,9 +8,10 @@ class PurchaseRequestController {
     try {
       const purchaseRequests = await models.PurchaseRequest.findAll({
         include: [
-          { model: models.Warehouse, attributes: ["id", "name"] },
+          { model: models.Warehouse, as: "warehouse", attributes: ["id", "name"] },
           {
             model: models.PurchaseRequestItem,
+            as: "items",
             include: [
               { model: models.Product, attributes: ["id", "name", "sku"] },
             ],
@@ -37,9 +38,10 @@ class PurchaseRequestController {
 
       const purchaseRequest = await models.PurchaseRequest.findByPk(id, {
         include: [
-          { model: models.Warehouse, attributes: ["id", "name"] },
+          { model: models.Warehouse, as: "warehouse", attributes: ["id", "name"] },
           {
             model: models.PurchaseRequestItem,
+            as: "items",
             include: [
               { model: models.Product, attributes: ["id", "name", "sku"] },
             ],
