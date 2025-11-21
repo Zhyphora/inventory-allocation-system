@@ -1,6 +1,7 @@
 # Webhook Testing Guide
 
 ## Overview
+
 Webhook endpoint untuk menerima stock receipt dari hub.foomid.id ke sistem inventory allocation.
 
 **Endpoint**: `POST /api/webhook/receive-stock`
@@ -11,25 +12,32 @@ Webhook endpoint untuk menerima stock receipt dari hub.foomid.id ke sistem inven
 ## Prerequisites
 
 ### 1. Backend Running
+
 ```bash
 cd /Volumes/project-danu/foom/backend
 npm run dev
 ```
+
 Backend akan berjalan di `http://localhost:3000`
 
 ### 2. Localtunnel Running
+
 ```bash
 # Terminal baru
 npx localtunnel --port 3000 --subdomain sad-rules-dress
 ```
+
 Atau jika sudah ada:
+
 ```bash
 # Cek status
 curl https://sad-rules-dress.loca.lt/health
 ```
 
 ### 3. Database dengan Purchase Request
+
 Pastikan ada Purchase Request dengan status PENDING:
+
 - PR00001 (ID: 043cd35e-5687-4345-9a0b-32ccc4da7e09)
 - PR00002 (ID: 8b102730-4528-4062-b1c8-0811900312e6)
 
@@ -38,6 +46,7 @@ Pastikan ada Purchase Request dengan status PENDING:
 ## Webhook Payload Format
 
 ### Standard Format (dari hub.foomid.id)
+
 ```json
 {
   "vendor": "FOOMLAB",
@@ -54,6 +63,7 @@ Pastikan ada Purchase Request dengan status PENDING:
 ```
 
 ### Important Notes
+
 - **vendor**: HARUS "FOOMLAB" (sesuai dengan `VENDOR_NAME` di .env backend)
 - **reference**: HARUS sama dengan Purchase Request reference (PR00001, PR00002, dll)
 - **qty_total**: Total quantity semua items
@@ -66,6 +76,7 @@ Pastikan ada Purchase Request dengan status PENDING:
 ### Method 1: Local Testing (curl)
 
 **Test untuk PR00002**:
+
 ```bash
 curl -X POST http://localhost:3000/api/webhook/receive-stock \
   -H "Content-Type: application/json" \
@@ -84,6 +95,7 @@ curl -X POST http://localhost:3000/api/webhook/receive-stock \
 ```
 
 **Expected Response** (Success):
+
 ```json
 {
   "status": "success",
@@ -110,11 +122,13 @@ curl -X POST http://localhost:3000/api/webhook/receive-stock \
 ### Method 2: Via Localtunnel (hub.foomid.id)
 
 **1. Pastikan localtunnel aktif**:
+
 ```bash
 npx localtunnel --port 3000 --subdomain sad-rules-dress
 ```
 
 **2. Test dari terminal lain**:
+
 ```bash
 curl -X POST https://sad-rules-dress.loca.lt/api/webhook/receive-stock \
   -H "Content-Type: application/json" \
@@ -135,14 +149,17 @@ curl -X POST https://sad-rules-dress.loca.lt/api/webhook/receive-stock \
 ### Method 3: Postman
 
 **1. Create new POST request**
+
 - URL: `http://localhost:3000/api/webhook/receive-stock` (untuk local)
 - Atau: `https://sad-rules-dress.loca.lt/api/webhook/receive-stock` (untuk tunnel)
 
 **2. Set Headers**:
+
 - Key: `Content-Type`
 - Value: `application/json`
 
 **3. Set Body (raw JSON)**:
+
 ```json
 {
   "vendor": "FOOMLAB",
@@ -165,10 +182,12 @@ curl -X POST https://sad-rules-dress.loca.lt/api/webhook/receive-stock \
 **1. Buka Dashboard** (http://localhost:3001)
 
 **2. Di bagian "Track Purchase Request"**:
+
 - Input: `PR00002`
 - Click: "Search"
 
 **3. Jika webhook sudah dijalankan**:
+
 - Status akan berubah menjadi "COMPLETED"
 - Stock akan ter-update di tabel bawah
 
@@ -178,19 +197,20 @@ curl -X POST https://sad-rules-dress.loca.lt/api/webhook/receive-stock \
 
 Produk yang tersedia di database:
 
-| SKU | Name | ID |
-|-----|------|-----|
-| FRESHLEMON | Fresh Lemon | 5c7ad089-4b87-4c68-b1b6-cfbb71c66fa7 |
-| ICYMINT | Icy Mint | 72c26f3e-864f-400a-b07d-afb9ebb0d45e |
+| SKU           | Name           | ID                                   |
+| ------------- | -------------- | ------------------------------------ |
+| FRESHLEMON    | Fresh Lemon    | 5c7ad089-4b87-4c68-b1b6-cfbb71c66fa7 |
+| ICYMINT       | Icy Mint       | 72c26f3e-864f-400a-b07d-afb9ebb0d45e |
 | ICYWATERMELON | Icy Watermelon | e6c38e39-6b62-41cb-9c72-b9ac24e28a56 |
-| STRAWBLISS | Straw Bliss | b8e1f5c2-3d9f-4a2b-8c1a-5e9d7f2a1b3c |
-| VANADREAM | Vana Dream | 7a2f1d9e-8b4c-4e5d-9c3a-1f2e3d4c5b6a |
+| STRAWBLISS    | Straw Bliss    | b8e1f5c2-3d9f-4a2b-8c1a-5e9d7f2a1b3c |
+| VANADREAM     | Vana Dream     | 7a2f1d9e-8b4c-4e5d-9c3a-1f2e3d4c5b6a |
 
 ---
 
 ## Testing Purchase Requests
 
 ### PR00001
+
 - **ID**: 043cd35e-5687-4345-9a0b-32ccc4da7e09
 - **Reference**: PR00001
 - **Status**: PENDING
@@ -198,6 +218,7 @@ Produk yang tersedia di database:
 - **Items**: Icy Mint (15 qty)
 
 **Webhook Payload**:
+
 ```json
 {
   "vendor": "FOOMLAB",
@@ -214,6 +235,7 @@ Produk yang tersedia di database:
 ```
 
 ### PR00002
+
 - **ID**: 8b102730-4528-4062-b1c8-0811900312e6
 - **Reference**: PR00002
 - **Status**: PENDING
@@ -221,6 +243,7 @@ Produk yang tersedia di database:
 - **Items**: Icy Mint (15 qty)
 
 **Webhook Payload**:
+
 ```json
 {
   "vendor": "FOOMLAB",
@@ -243,6 +266,7 @@ Produk yang tersedia di database:
 ### 1. Start All Services
 
 **Terminal 1 - Backend**:
+
 ```bash
 cd /Volumes/project-danu/foom/backend
 npm run dev
@@ -250,6 +274,7 @@ npm run dev
 ```
 
 **Terminal 2 - Frontend**:
+
 ```bash
 cd /Volumes/project-danu/foom/frontend
 npm run dev
@@ -257,6 +282,7 @@ npm run dev
 ```
 
 **Terminal 3 - Localtunnel**:
+
 ```bash
 npx localtunnel --port 3000 --subdomain sad-rules-dress
 # Tunggu sampai: "your url is: https://sad-rules-dress.loca.lt"
@@ -265,18 +291,21 @@ npx localtunnel --port 3000 --subdomain sad-rules-dress
 ### 2. Verify Setup
 
 **Check Backend**:
+
 ```bash
 curl -H "x-api-key: Testing1" http://localhost:3000/api/products
 # Should return array of products
 ```
 
 **Check Frontend**:
+
 ```bash
 curl http://localhost:3001
 # Should return HTML page
 ```
 
 **Check Localtunnel**:
+
 ```bash
 curl https://sad-rules-dress.loca.lt/api/products -H "x-api-key: Testing1"
 # Should return same as backend
@@ -285,6 +314,7 @@ curl https://sad-rules-dress.loca.lt/api/products -H "x-api-key: Testing1"
 ### 3. Send Webhook Request
 
 **Option A - Local (Fastest)**:
+
 ```bash
 curl -X POST http://localhost:3000/api/webhook/receive-stock \
   -H "Content-Type: application/json" \
@@ -303,6 +333,7 @@ curl -X POST http://localhost:3000/api/webhook/receive-stock \
 ```
 
 **Option B - Via Tunnel (Simulates hub.foomid.id)**:
+
 ```bash
 curl -X POST https://sad-rules-dress.loca.lt/api/webhook/receive-stock \
   -H "Content-Type: application/json" \
@@ -323,18 +354,21 @@ curl -X POST https://sad-rules-dress.loca.lt/api/webhook/receive-stock \
 ### 4. Verify Results
 
 **Check Stock Updated**:
+
 ```bash
 curl -H "x-api-key: Testing1" "http://localhost:3000/api/stocks?warehouse_id=369e1f04-ea77-4b84-af61-0b232b384d12"
 # ICYMINT stock should be 15
 ```
 
 **Check PR Status**:
+
 ```bash
 curl -H "x-api-key: Testing1" "http://localhost:3000/api/purchase/request/reference/PR00002"
 # Status should be "COMPLETED"
 ```
 
 **Check Frontend Dashboard**:
+
 1. Open http://localhost:3001
 2. In "Track Purchase Request" section, search for "PR00002"
 3. Should show status "COMPLETED" and items received
@@ -344,8 +378,10 @@ curl -H "x-api-key: Testing1" "http://localhost:3000/api/purchase/request/refere
 ## Common Errors & Solutions
 
 ### Error: "Route not found"
+
 **Cause**: Backend not running or route not registered
-**Solution**: 
+**Solution**:
+
 ```bash
 # Check if backend is running
 ps aux | grep "node.*server"
@@ -354,35 +390,44 @@ cd /Volumes/project-danu/foom/backend && npm run dev
 ```
 
 ### Error: "Vendor not found"
+
 **Cause**: Vendor name doesn't match
 **Solution**: Check backend .env file:
+
 ```bash
 # Should have:
 VENDOR_NAME=FOOMLAB
 ```
 
 ### Error: "Purchase request not found"
+
 **Cause**: Reference doesn't match any PR in database
 **Solution**: Verify PR exists:
+
 ```bash
 curl -H "x-api-key: Testing1" "http://localhost:3000/api/purchase/request"
 # Look for the reference you're using
 ```
 
 ### Error: "Product not found"
+
 **Cause**: SKU doesn't match any product
 **Solution**: Check available products:
+
 ```bash
 curl -H "x-api-key: Testing1" "http://localhost:3000/api/products" | jq '.data[] | {name, sku}'
 ```
 
 ### Error: "Cannot GET /api/webhook/receive-stock"
+
 **Cause**: Using GET instead of POST
 **Solution**: Make sure to use `-X POST` in curl
 
 ### Error: "SSL: CERTIFICATE_VERIFY_FAILED"
+
 **Cause**: Localtunnel certificate issue
 **Solution**: Use curl with `-k` flag:
+
 ```bash
 curl -k -X POST https://sad-rules-dress.loca.lt/api/webhook/receive-stock \
   -H "Content-Type: application/json" \
@@ -436,11 +481,13 @@ curl -X POST http://localhost:3000/api/webhook/receive-stock \
 ### Test with Different Warehouses
 
 Get warehouse list:
+
 ```bash
 curl -H "x-api-key: Testing1" "http://localhost:3000/api/warehouses"
 ```
 
 Then create new PR with different warehouse:
+
 ```bash
 curl -X POST http://localhost:3000/api/purchase/request \
   -H "Content-Type: application/json" \
@@ -462,6 +509,7 @@ curl -X POST http://localhost:3000/api/purchase/request \
 ## Backend Logs
 
 Monitor backend console untuk webhook logs:
+
 ```
 [Webhook] Received stock receipt from vendor: FOOMLAB
 [Webhook] Processing reference: PR00002
