@@ -1,0 +1,535 @@
+openapi: 3.1.0
+info:
+  title: Inventory Allocation System API
+  description: Complete REST API untuk Inventory Allocation System dengan complex logic, concurrency handling (ACID), dan webhooks
+  version: 1.0.0
+  contact:
+    name: Development Team
+    email: dev@example.com
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:3000
+    description: Development Server
+  - url: https://api.example.com
+    description: Production Server
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: API Key untuk authentication
+
+  schemas:
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        sku:
+          type: string
+
+    Stock:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        warehouse_id:
+          type: string
+          format: uuid
+        product_id:
+          type: string
+          format: uuid
+        quantity:
+          type: integer
+        warehouse:
+          $ref: "#/components/schemas/Warehouse"
+        product:
+          $ref: "#/components/schemas/Product"
+
+    Warehouse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+
+    PurchaseRequestItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        purchase_request_id:
+          type: string
+          format: uuid
+        product_id:
+          type: string
+          format: uuid
+        quantity:
+          type: integer
+
+    PurchaseRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        reference:
+          type: string
+        warehouse_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [DRAFT, PENDING, COMPLETED]
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PurchaseRequestItem"
+
+    SuccessResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [success]
+        statusCode:
+          type: integer
+        message:
+          type: string
+        data:
+          type: object
+          nullable: true
+        error:
+          type: object
+          nullable: true
+        timestamp:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [error]
+        statusCode:
+          type: integer
+        message:
+          type: string
+        data:
+          type: object
+          nullable: true
+        error:
+          type: object
+          properties:
+            type:
+              type: string
+            details:
+              type: string
+        timestamp:
+          type: string
+          format: date-time
+
+security:
+  - ApiKeyAuth: []
+
+paths:
+  /products:
+    get:
+      summary: Get all products
+      description: List semua available products dengan id, name, dan SKU
+      operationId: getAllProducts
+      tags:
+        - Products
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Product"
+        "401":
+          description: Unauthorized - Missing API key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /stocks:
+    get:
+      summary: Get stock levels
+      description: List stock levels untuk semua warehouse dengan optional filter
+      operationId: getStockLevels
+      tags:
+        - Stocks
+      parameters:
+        - name: warehouse_id
+          in: query
+          description: Filter by warehouse ID
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: product_id
+          in: query
+          description: Filter by product ID
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Stock"
+        "401":
+          description: Unauthorized - Missing API key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /purchase/request:
+    post:
+      summary: Create purchase request
+      description: Create a new Purchase Request dengan status DRAFT
+      operationId: createPurchaseRequest
+      tags:
+        - Purchase Requests
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - warehouse_id
+                - items
+              properties:
+                warehouse_id:
+                  type: string
+                  format: uuid
+                items:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    required:
+                      - product_id
+                      - quantity
+                    properties:
+                      product_id:
+                        type: string
+                        format: uuid
+                      quantity:
+                        type: integer
+                        minimum: 1
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/PurchaseRequest"
+        "400":
+          description: Bad Request - Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not Found - Warehouse or product not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /purchase/request/{id}:
+    put:
+      summary: Update purchase request
+      description: Update Purchase Request - hanya allowed ketika status DRAFT
+      operationId: updatePurchaseRequest
+      tags:
+        - Purchase Requests
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [DRAFT, PENDING, COMPLETED]
+                warehouse_id:
+                  type: string
+                  format: uuid
+                items:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      product_id:
+                        type: string
+                        format: uuid
+                      quantity:
+                        type: integer
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/PurchaseRequest"
+        "400":
+          description: Bad Request - Cannot update non-DRAFT request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      summary: Delete purchase request
+      description: Delete Purchase Request - hanya allowed ketika status DRAFT
+      operationId: deletePurchaseRequest
+      tags:
+        - Purchase Requests
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "400":
+          description: Bad Request - Cannot delete non-DRAFT request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /webhook/receive-stock:
+    post:
+      summary: Receive stock from supplier
+      description: Handle incoming stock dari PT FOOM LAB GLOBAL dengan ACID transaction guarantee
+      operationId: receiveStock
+      tags:
+        - Webhooks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - vendor
+                - reference
+                - details
+              properties:
+                vendor:
+                  type: string
+                  description: Vendor name (must be "PT FOOM LAB GLOBAL")
+                reference:
+                  type: string
+                  description: Purchase Request reference
+                qty_total:
+                  type: integer
+                  description: Total quantity
+                details:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    required:
+                      - sku_barcode
+                      - qty
+                    properties:
+                      product_name:
+                        type: string
+                      sku_barcode:
+                        type: string
+                      qty:
+                        type: integer
+                        minimum: 1
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          reference:
+                            type: string
+                          warehouse_id:
+                            type: string
+                          status:
+                            type: string
+                          items_processed:
+                            type: array
+                            items:
+                              type: object
+                          total_quantity:
+                            type: integer
+        "400":
+          description: Bad Request - Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden - Invalid vendor
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not Found - Reference or SKU not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Conflict - Already processed (idempotency)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+tags:
+  - name: Products
+    description: Product management
+  - name: Stocks
+    description: Stock/inventory management
+  - name: Purchase Requests
+    description: Purchase request planning and execution
+  - name: Webhooks
+    description: Webhook endpoints untuk vendor integration
