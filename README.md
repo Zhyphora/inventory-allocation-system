@@ -16,10 +16,11 @@ A full-stack web application for managing inventory allocation, stock levels, an
 ### Prerequisites
 
 - Node.js 18+ (backend and frontend)
-- PostgreSQL 12+ (backend)
+- MySQL 8+ (backend database)
 - npm or yarn
+- localtunnel (untuk expose local server ke internet)
 
-### Backend Setup
+### 1. Backend Setup
 
 ```bash
 cd backend
@@ -29,14 +30,17 @@ npm install
 
 # Setup environment
 cp .env.example .env
-# Edit .env with your PostgreSQL credentials
+# Edit .env dengan konfigurasi berikut:
 # DB_HOST=localhost
-# DB_PORT=5432
-# DB_NAME=inventory_db
-# DB_USER=dev
-# DB_PASSWORD=Testing1
+# DB_PORT=3306
+# DB_NAME=foom_inventory
+# DB_USER=root
+# DB_PASSWORD=root
 # PORT=3000
+# NODE_ENV=development
 # API_KEY=Testing1
+# VENDOR_NAME=FOOMLAB
+# HUB_FOOMID_URL=https://hub.foomid.id
 
 # Run migrations
 npx sequelize-cli db:migrate
@@ -44,12 +48,13 @@ npx sequelize-cli db:migrate
 # Seed initial data
 npx sequelize-cli db:seed:all
 
-# Start development server
+# Start development server (Terminal 1)
 npm run dev
-# Server runs on http://localhost:3000
+# Backend berjalan di http://localhost:3000
+# Output: "Server is running on port 3000"
 ```
 
-### Frontend Setup
+### 2. Frontend Setup
 
 ```bash
 cd frontend
@@ -59,77 +64,338 @@ npm install
 
 # Setup environment
 cp .env.example .env.local
-# Default config:
+# Default config (biasanya sudah benar):
 # NEXT_PUBLIC_API_URL=http://localhost:3000
 # NEXT_PUBLIC_API_KEY=Testing1
 
-# Start development server
+# Start development server (Terminal 2)
 npm run dev
-# Application runs on http://localhost:3000
+# Frontend berjalan di http://localhost:3001
+# Output: "ready - started server on 0.0.0.0:3001"
 ```
 
-## Features
+### 3. Localtunnel Setup (untuk Webhook dari hub.foomid.id)
 
-### Backend (Express.js + PostgreSQL)
+```bash
+# Terminal 3 - Buka terminal baru
+npx localtunnel --port 3000 --subdomain sad-rules-dress
 
-- **Stock Dashboard API**: GET `/api/stocks` - Retrieve inventory levels with optional filters
-- **Product Management**: GET `/api/products` - List all products
-- **Purchase Requests**: CRUD operations for purchase request lifecycle (DRAFT → PENDING → COMPLETED)
-- **Webhook Integration**: POST `/api/webhook/receive-stock` - Handle stock receipt with idempotency
-- **Authentication**: API Key authentication via `x-api-key` header
-- **ACID Transactions**: Ensures data consistency in concurrent operations
-- **Error Handling**: Standardized error responses with proper HTTP status codes
+# Output akan menampilkan:
+# "your url is: https://sad-rules-dress.loca.lt"
+# Ini adalah URL yang bisa diakses dari internet (dari hub.foomid.id)
+```
 
-### Frontend (Next.js 14)
+### Verification Checklist
 
-- **Stock Dashboard**: Real-time stock levels with warehouse/product filters
-- **Purchase Requests List**: View all requests with search and filtering
-- **Purchase Request Form**: Dynamic form with multiple items, warehouse/product selection
-- **Purchase Request Detail**: View details, edit status, delete (if DRAFT)
-- **Error Handling**: User-friendly error messages and loading states
-- **Responsive Design**: Mobile-friendly interface with Tailwind CSS
+- [ ] Backend running: `curl -H "x-api-key: Testing1" http://localhost:3000/api/products`
+  - Should return: `{"status": "success", "data": [...]}`
+- [ ] Frontend accessible: Open http://localhost:3001 in browser
+  - Should show: Inventory System dashboard dengan stats
+- [ ] Tunnel active: `curl https://sad-rules-dress.loca.lt/api/products -H "x-api-key: Testing1"`
+  - Should return: Same response as local backend
 
-## API Endpoints
+---
 
-### Products
+## Cara Menggunakan Sistem
+
+### Dashboard (http://localhost:3001)
+
+**Fitur Utama:**
+
+1. **Quick Stats** (Top)
+
+   - Total Products: Jumlah produk unik
+   - Total Stock Units: Total quantity semua warehouse
+   - Warehouses: Jumlah warehouse yang memiliki stock
+
+2. **Track Purchase Request**
+
+   - Klik "Click here to enter PR number →"
+   - Input PR number (misal: PR00002)
+   - System akan menampilkan:
+     - Status PR (DRAFT/PENDING/COMPLETED)
+     - Items yang di-order
+     - Stock dari warehouse tersebut
+
+3. **Filter Stock Inventory**
+
+   - **Filter by SKU**: Ketik SKU produk (misal: ICYMINT)
+   - **Filter by Warehouse**: Ketik nama warehouse (misal: Surabaya Warehouse)
+   - Bisa combine kedua filter
+   - Real-time filtering saat mengetik
+
+4. **Stock Inventory Table**
+   - Menampilkan semua stock dengan kolom:
+     - Product: Nama produk
+     - SKU: Stock Keeping Unit
+     - Warehouse: Lokasi warehouse
+     - Stock: Quantity (ditampilkan dalam badge hijau)
+
+### Purchase Requests (http://localhost:3001/purchase-requests)
+
+**Fitur:**
+
+1. **Stats Cards** (Top)
+
+   - Total: Semua PR
+   - Draft: PR yang masih draft
+   - Pending: PR menunggu stock diterima
+   - Completed: PR sudah selesai
+
+2. **Search & Filter**
+
+   - Search by Reference: Cari PR by nomor
+   - Status Filter: Filter by DRAFT/PENDING/COMPLETED/All
+
+3. **Purchase Request Table**
+   - Reference: Nomor PR
+   - Warehouse: Lokasi warehouse
+   - Items: Jumlah item (dalam badge)
+   - Status: Status dengan warna (hijau=completed, kuning=pending, abu=draft)
+   - Date: Tanggal pembuatan
+   - Action: "View Details →" untuk melihat detail
+
+### Create Purchase Request (http://localhost:3001/purchase-requests/create)
+
+**Langkah-langkah:**
+
+1. **Select Warehouse**
+
+   - Pilih warehouse dari dropdown (misal: Surabaya Warehouse)
+
+2. **Add Items**
+
+   - Klik "Add Item" untuk menambah produk
+   - Select Product: Pilih produk dari dropdown
+   - Quantity: Input jumlah yang di-order
+   - Remove: Tombol untuk hapus item
+
+3. **Summary**
+
+   - Menampilkan total items dan product count
+   - Automatically calculated
+
+4. **Submit**
+   - Klik "Create" untuk membuat PR
+   - Atau "Cancel" untuk batal
+
+---
+
+## Backend API Reference
+
+### Authentication
+
+Semua request harus include header:
 
 ```
+x-api-key: Testing1
+```
+
+### Endpoints
+
+#### Products
+
+```bash
 GET /api/products
+# Response: Array of all products
 ```
 
-### Stocks
+#### Stocks
 
-```
+```bash
 GET /api/stocks
-GET /api/stocks?warehouse_id={uuid}
-GET /api/stocks?product_id={uuid}
+# Get all stocks
+
+GET /api/stocks?warehouse_id=UUID
+# Filter by warehouse
+
+GET /api/stocks?product_id=UUID
+# Filter by product
+```
+
+#### Purchase Requests
+
+```bash
 GET /api/purchase/request
+# Get all purchase requests
+
+GET /api/purchase/request/reference/PR00002
+# Get specific PR by reference
+
 GET /api/purchase/request/{id}
-```
+# Get PR by ID
 
-### Purchase Requests
-
-```
 POST /api/purchase/request
+# Create new PR
+# Body: { warehouse_id, items: [{product_id, quantity}] }
+
 PUT /api/purchase/request/{id}
+# Update PR status
+# Body: { status: "PENDING" or "COMPLETED" }
+
 DELETE /api/purchase/request/{id}
+# Delete PR (only if DRAFT)
 ```
 
-### Webhooks
+#### Webhook
 
-```
+```bash
 POST /api/webhook/receive-stock
+# Receive stock from hub.foomid.id
+# Body: {
+#   "vendor": "FOOMLAB",
+#   "reference": "PR00002",
+#   "qty_total": 15,
+#   "details": [{
+#     "product_name": "Icy Mint",
+#     "sku_barcode": "ICYMINT",
+#     "qty": 15
+#   }]
+# }
 ```
+
+---
+
+## Tunneling dengan Localtunnel
+
+### Setup
+
+```bash
+# Install globally (optional)
+npm install -g localtunnel
+
+# Atau jalankan langsung
+npx localtunnel --port 3000 --subdomain sad-rules-dress
+```
+
+### What is Localtunnel?
+
+Localtunnel expose local server (localhost:3000) ke internet dengan URL publik:
+
+- Local: http://localhost:3000
+- Internet: https://sad-rules-dress.loca.lt
+
+Ini memungkinkan hub.foomid.id untuk mengirim webhook ke sistem local.
+
+### Usage
+
+**1. Start Backend**
+
+```bash
+cd backend && npm run dev
+```
+
+**2. Start Tunnel** (Terminal baru)
+
+```bash
+npx localtunnel --port 3000 --subdomain sad-rules-dress
+# Output: "your url is: https://sad-rules-dress.loca.lt"
+```
+
+**3. Configure di hub.foomid.id**
+
+- Webhook URL: `https://sad-rules-dress.loca.lt/api/webhook/receive-stock`
+- Method: POST
+- Content-Type: application/json
+
+**4. Test Webhook**
+
+```bash
+# Local test
+curl -X POST http://localhost:3000/api/webhook/receive-stock \
+  -H "Content-Type: application/json" \
+  -d '{
+    "vendor": "FOOMLAB",
+    "reference": "PR00002",
+    "qty_total": 15,
+    "details": [{"product_name": "Icy Mint", "sku_barcode": "ICYMINT", "qty": 15}]
+  }'
+
+# Via tunnel (simulates hub.foomid.id)
+curl -X POST https://sad-rules-dress.loca.lt/api/webhook/receive-stock \
+  -H "Content-Type: application/json" \
+  -d '...'
+```
+
+### Troubleshooting Tunnel
+
+**Tunnel tidak connect:**
+
+```bash
+# Check if port 3000 is accessible
+curl http://localhost:3000/api/products -H "x-api-key: Testing1"
+
+# Kill existing process jika perlu
+lsof -ti:3000 | xargs kill -9
+```
+
+**SSL Certificate Error:**
+
+```bash
+# Use curl with -k flag
+curl -k https://sad-rules-dress.loca.lt/api/products \
+  -H "x-api-key: Testing1"
+```
+
+---
 
 ## Database Schema
 
 ### Tables
 
-1. **warehouses** - Storage locations
-2. **products** - Product catalog
-3. **stocks** - Inventory levels (warehouse × product)
-4. **purchase_requests** - Purchase orders (DRAFT/PENDING/COMPLETED)
-5. **purchase_request_items** - Line items in purchase requests
+1. **warehouses**
+
+   - id: UUID
+   - name: String (Surabaya Warehouse, Jakarta Warehouse, dll)
+   - created_at, updated_at: Timestamp
+
+2. **products**
+
+   - id: UUID
+   - name: String
+   - sku: String (ICYMINT, FRESHLEMON, dll)
+   - created_at, updated_at: Timestamp
+
+3. **stocks**
+
+   - id: UUID
+   - warehouse_id: FK to warehouses
+   - product_id: FK to products
+   - quantity: Integer
+   - created_at, updated_at: Timestamp
+
+4. **purchase_requests**
+
+   - id: UUID
+   - reference: String (PR00001, PR00002, dll) - UNIQUE
+   - warehouse_id: FK to warehouses
+   - status: Enum (DRAFT, PENDING, COMPLETED)
+   - created_at, updated_at: Timestamp
+
+5. **purchase_request_items**
+   - id: UUID
+   - purchase_request_id: FK to purchase_requests
+   - product_id: FK to products
+   - quantity: Integer
+   - created_at, updated_at: Timestamp
+
+---
+
+## Quick Start Command (All in One)
+
+```bash
+# Terminal 1 - Backend
+cd /Volumes/project-danu/foom/backend && npm run dev
+
+# Terminal 2 - Frontend
+cd /Volumes/project-danu/foom/frontend && npm run dev
+
+# Terminal 3 - Tunnel
+npx localtunnel --port 3000 --subdomain sad-rules-dress
+
+# Then open browser
+# http://localhost:3001 untuk akses frontend
+```
 
 ## Design Decisions
 
@@ -365,22 +631,6 @@ npm run dev
 - Enable HTTPS in production
 - Add rate limiting to prevent abuse
 - Validate all user inputs server-side
-
-## Version Control Strategy
-
-- Feature branches: `feature/feature-name`
-- Bug fixes: `bugfix/bug-name`
-- Release branches: `release/v1.0.0`
-- Commits: Clear, descriptive messages
-- Pull requests: Include testing checklist and design decisions
-
-## Contributing
-
-1. Create a feature branch from `main`
-2. Make changes following the existing code structure
-3. Test thoroughly before submitting PR
-4. Update documentation as needed
-5. Follow the existing code style and conventions
 
 ## License
 
