@@ -640,3 +640,4 @@ This project is provided as-is for evaluation purposes.
 
 For issues or questions, please refer to the documentation files in the respective folders.
 # inventory-allocation-system
+# inventory-allocation-system
