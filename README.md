@@ -639,3 +639,4 @@ This project is provided as-is for evaluation purposes.
 ## Support
 
 For issues or questions, please refer to the documentation files in the respective folders.
+# inventory-allocation-system
